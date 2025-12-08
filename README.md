@@ -1,4 +1,14 @@
-Half-wlkaing man is the project aimming to develop a bipedel robots haing an ability to follow the selected object with safe distance. The steup instruction can be found below:
+Half-walking man is a project aiming to develop a bipedal robot having the ability to follow the selected object at a safe distance. The setup instruction can be found below:
+
+**Repo Structure**
+"main" branch
+- CAD: directory containing STL files used to create this robot
+- src: directory containing all final source codes and their Makefiles
+  - laptop: contains object-detection code in cpp, which is meant to be implemented on a laptop
+  - ul: contains userspace code which receives commands from the laptop code
+  - km: contains kernel module code, which receive commands from userspace program and implements distance sensor and servo motors controls.
+
+"burnt" branch is for development
 
 **Create Local Network**
 - First you need to assign IP address using Interface Configuration to Laptop using Beagle Bone's ethernet IP address
@@ -6,36 +16,39 @@ Half-wlkaing man is the project aimming to develop a bipedel robots haing an abi
 
 For Laptop: 
 - Using IP address number except the last digit to create private channel
-- Find the name your ethernet port and replace enp5s0 with it
-- Command: sudo ifconfig enp5s0 192.168.7.1 netmask 255.255.255.0 up (assign IP address to ethernet part and then determine the capcaity of how many devices can be assigned to use the private channel)
+- Find the name your ethernet port using the command ` ls /sys/class/net/ ` and replace enp5s0 with it. There may be multiple names, look for names like eth0, enp2s0, or wlp3s0 (for wireless)
+- Command: `sudo ifconfig enp5s0 192.168.7.1 netmask 255.255.255.0 up` (assign IP address to ethernet part and then determine the capcaity of how many devices can be assigned to use the private channel)
 
 For Beagle Bone: 
-- ifconfig eth0 192.168.7.2 netmask 255.255.255.0 up
+- `ifconfig eth0 192.168.7.2 netmask 255.255.255.0 up`
 
-**Upload Kernel Module and Userspace**
+**Make and Upload Kernel Module and Userspace**
+
+Clone the src folder and make each file. You should have `walk.ko`, `walk`, and `Laptop`
 
 In Beagle Bone: 
 - Using command: rz (activate picocom)
-- Then click Ctrl A and Ctrl S (trigger the laptop to prepare to send file)
+- Then click Ctrl A and Ctrl S (trigger the laptop to prepare to send the file)
 - Then use the file path
 
 **Run Object Detection and Kernel program**
 
 First: Install Kernel Module (Beagle Bone)
 1. Create Charater device
-    - Command: mknod /dev/walker c 61 0
+    - Command: `mknod /dev/walker c 61 0`
 2. Insert Kernel Module into the device node
-    - Command: insmod /root/walk.ko
+    - Command: `insmod /root/walk.ko`
 3. Run Userspace command
-    - Command: ./kwalk
+    - Command: `./kwalk`
+(Or send src/run.sh to Beagle Bone and execute it with `./run.sh`)
 
 Second: Run Object Detection Code (Laptop)
-1. Compile Code with C++ and openCV flag
-    - Command: g++ Test5.cpp -o Test5 `pkg-config --cflags --libs opencv4`
+1. Compile Code with C++ and OpenCV flag
+    - Command: ` g++ Test5.cpp -o Test5 ``pkg-config --cflags --libs opencv4`` `
 2. Run Code:
-    - Command: ./Test5
+    - Command: `./Laptop`
   
 Result: 
-- The expected output is the laptop send real-time data using ethernet port to Beagle Bone. Beagle Bone uses Userspace as middleman to receive and send data to kernel.
-  Kernel will use the sent data to control servo motor and distance sensor
-- The object can be changed to be 4 types. First, it need to select the video window and then click spacebar to change the combination of object and color. 
+- The expected output is the laptop sending real-time data using the Ethernet port to the Beagle Bone. Beagle Bone uses Userspace as a middleman to receive and send data to the kernel.
+  The kernel will use the sent data to control the servo motor and the distance sensor
+- The object can be changed to be 4 types. First, select the video window, then press the spacebar to change the target combination of object and color. 
