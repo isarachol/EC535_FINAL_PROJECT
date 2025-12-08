@@ -176,6 +176,7 @@ static void move(void){
 static void timer_callback(struct timer_list *t){
     // Check if we are within the "valid window" of a vision command
     bool vision_is_fresh = time_before(jiffies, last_vision_jiffies + msecs_to_jiffies(VISION_TIMEOUT_MS));
+    blink_trig(); // get distance
     printk(KERN_INFO "Distance = %lu cm\n", dist_cm);
 
     // --- 1. HANDLE VISION OVERRIDE ---
@@ -217,9 +218,8 @@ static void timer_callback(struct timer_list *t){
              amplitude_R = 10;
         }
 
-        if (echoed == 0)
-        echoed = 0;
-        blink_trig();
+        // if (echoed == 0)
+        // echoed = 0;
     
         if (dist_cm <= dist_goal) {
             current_mode = 0;
@@ -271,7 +271,6 @@ static int gpio_direction(struct gpio_desc *pin, bool is_output, int value){
         return 0;
     }
 }
-
 
 // Setup GPIO pin 
 static int walker_setup (void){
