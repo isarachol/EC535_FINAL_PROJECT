@@ -1,7 +1,7 @@
-## Autonomous Walking Robot (Half-body walking man) 
+# Autonomous Walking Robot (Half-body walking man) 
 Half-body walking man is a project aiming to develop a simple bipedal robot capable of following a selected object at a safe distance. In this project, we created the mechanical design, electrical wiring, and three programs.
 
-# Repo Structure
+## Repo Structure
 "main" branch
 - CAD: directory containing STL files used to create this robot
 - src: directory containing all final source codes and their Makefiles
@@ -11,7 +11,7 @@ Half-body walking man is a project aiming to develop a simple bipedal robot capa
 
 "burnt" branch is for development
 
-# How to replicate our creation
+## How to replicate our creation
 
 **Components**
 - Beagle Bone black (with lab5 kernel image, USB to TTL Serial Cable, and power supply) x 1
@@ -62,7 +62,7 @@ Second: Run Object Detection Code (Laptop)
 2. Run Code:
     - Command: `./Laptop`
   
-Result: 
+**Expected Results**
 - The expected output is the laptop sending real-time data using the Ethernet port to the Beagle Bone. Beagle Bone uses Userspace as a middleman to receive and send data to the kernel.
   The kernel will use the sent data to control the servo motor and the distance sensor
 - The object can be changed to be 4 types. First, select the video window, then press the spacebar to change the target combination of object and color. 
