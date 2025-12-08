@@ -13,6 +13,7 @@ For Beagle Bone:
 - ifconfig eth0 192.168.7.2 netmask 255.255.255.0 up
 
 **Upload Kernel Module and Userspace**
+
 In Beagle Bone: 
 - Using command: rz (activate picocom)
 - Then click Ctrl A and Ctrl S (trigger the laptop to prepare to send file)
