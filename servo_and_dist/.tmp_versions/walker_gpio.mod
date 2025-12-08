@@ -1,0 +1,3 @@
+/ad/eng/users/i/s/isara/Documents/ec535/lab/lab5/EC535_FINAL_PROJECT/servo_and_dist/walker_gpio.ko
+/ad/eng/users/i/s/isara/Documents/ec535/lab/lab5/EC535_FINAL_PROJECT/servo_and_dist/walker_gpio.o
+

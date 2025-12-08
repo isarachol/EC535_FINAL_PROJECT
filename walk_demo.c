@@ -147,20 +147,26 @@ static void actuate(void) {
 // direction determined by pwm0_state in range [-10 , 10]
 static void move(void){
 
-    // if not parallel, or not fully extended
-    if (pwm1_state != -pwm2_state || (pwm1_state != 10 && pwm1_state != -10)) {
-        // prepare to push forward
-        pwm1_state = -10;
-        pwm2_state = 10;
-    }
-    else { // if prepared, update state
+    // if forward --> worked
+    if (amplitude_L == amplitude_R) {
+        if (pwm1_state != -pwm2_state || (pwm1_state != 10 && pwm1_state != -10)) {
+            // prepare to push forward
+            pwm1_state = -10;
+            pwm2_state = 10;
+        }
+        else { // if prepared, update state
+            pwm1_state = -pwm1_state;
+            pwm2_state = -pwm2_state;
+        }
+    } else if (amplitude_L > amplitude_R) { // if turn right
+        pwm2_state = 10; // hold forward
+        printk(KERN_INFO "Turn right\n");
         pwm1_state = -pwm1_state;
+    } else if (amplitude_L < amplitude_R) { // if turn left
+        pwm1_state = 10; // hold forward
+        printk(KERN_INFO "Turn left\n");
         pwm2_state = -pwm2_state;
     }
-
-    // steer 0 if forward, 5 if right, -5 if left --> need range of turning angle
-    if (pwm0_state < -5) pwm0_state = -5;
-    else if (pwm0_state > 5) pwm0_state = 5;
     
     // FIX: Removed double calculation of duty here. actuate() calls calc_duty().
     actuate();
@@ -168,21 +174,29 @@ static void move(void){
 
 // Callback function 
 static void timer_callback(struct timer_list *t){
-    
     // Check if we are within the "valid window" of a vision command
     bool vision_is_fresh = time_before(jiffies, last_vision_jiffies + msecs_to_jiffies(VISION_TIMEOUT_MS));
+    printk(KERN_INFO "Distance = %lu cm\n", dist_cm);
 
     // --- 1. HANDLE VISION OVERRIDE ---
     if (vision_is_fresh) {
         
         if (current_mode == VISION_CONTROL_MODE) {
-            // Ensure motors are enabled
-            if (!pwm0_enabled) { pwm_enable(pwm0); pwm0_enabled = true; }
-            if (!pwm1_enabled) { pwm_enable(pwm1); pwm1_enabled = true; }
-            if (!pwm2_enabled) { pwm_enable(pwm2); pwm2_enabled = true; }
             
-            // Advance the walking cycle!
-            move(); 
+            if (dist_cm <= dist_goal) { // Goal reached!
+                current_mode = 0;
+                if (pwm0_enabled) { pwm_disable(pwm0); pwm0_enabled = false; }
+                if (pwm1_enabled) { pwm_disable(pwm1); pwm1_enabled = false; }
+                if (pwm2_enabled) { pwm_disable(pwm2); pwm2_enabled = false; }
+            } else {
+                // Ensure motors are enabled
+                if (!pwm0_enabled) { pwm_enable(pwm0); pwm0_enabled = true; }
+                if (!pwm1_enabled) { pwm_enable(pwm1); pwm1_enabled = true; }
+                if (!pwm2_enabled) { pwm_enable(pwm2); pwm2_enabled = true; }
+                
+                // Advance the walking cycle!
+                move(); 
+            }
             
         } else {
             // Vision explicitly sent STOP
@@ -193,6 +207,7 @@ static void timer_callback(struct timer_list *t){
         
     } else {
         // --- 2. AUTONOMOUS / DISTANCE LOGIC ---
+        // Follow previous command. Stop only if distance is too close ( same as goal distance )
         
         if (current_mode == VISION_CONTROL_MODE) {
              printk(KERN_INFO "walker: Vision signal lost (Timeout). Reverting.\n");
@@ -599,7 +614,7 @@ static int walker_init(void)
     }
     pwm_config(pwm1, duty_center, pwm_period);
     pwm1_enabled = false;
-    pwm1_state = 0;
+    pwm1_state = 10;
 
     pwm2 = pwm_request(pwm2_id, "pwm2"); // FIX: Use configured pwm2_id
     if (IS_ERR(pwm2)) {
@@ -611,7 +626,7 @@ static int walker_init(void)
     }
     pwm_config(pwm2, duty_center, pwm_period);
     pwm2_enabled = false;
-    pwm2_state = 0;
+    pwm2_state = -10;
 
     // Initialize timer setup, BUT DO NOT START IT YET (Lazy Start)
     timer_setup(&dist_timer, timer_callback, 0);

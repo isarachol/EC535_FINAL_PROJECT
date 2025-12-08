@@ -116,9 +116,6 @@ static void timer_callback(struct timer_list *t){
 	echoed = 0;
 	blink_trig();
 
-    // pwm_config(pwm0, calc_duty(((count_cycle + 0) % 3) - 1), pwm_period);
-    // pwm_config(pwm1, calc_duty(((count_cycle + 1) % 3) - 1), pwm_period);
-    // pwm_config(pwm2, calc_duty(((count_cycle + 2) % 3) - 1), pwm_period);
     if (!pwm0_enabled) {
         pwm_enable(pwm0);
     }
@@ -147,6 +144,8 @@ static void timer_callback(struct timer_list *t){
         pwm_enable(pwm0);
         pwm_enable(pwm1);
         pwm_enable(pwm2);
+
+        pwm0_state = (count_cycle % 2) * 5;
 
         // TODO determine mode
         current_mode = 1;
