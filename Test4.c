@@ -31,7 +31,7 @@ MODULE_DESCRIPTION("Walker Robot Driver with Vision Bridge");
 // ID 0 = P9_22 (EHRPWM0A) - Steering
 // ID 4 = P9_14 (EHRPWM1A) - Left Leg
 // ID 5 = P9_16 (EHRPWM1B) - Right Leg
-#define pwm0_id 0 
+#define pwm0_id 1 
 #define pwm1_id 4 
 #define pwm2_id 5 
 
