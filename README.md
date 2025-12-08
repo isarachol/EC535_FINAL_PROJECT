@@ -1,6 +1,7 @@
-Half-walking man is a project aiming to develop a bipedal robot having the ability to follow the selected object at a safe distance. The setup instruction can be found below:
+## Autonomous Walking Robot (Half-body walking man) 
+Half-body walking man is a project aiming to develop a simple bipedal robot capable of following a selected object at a safe distance. In this project, we created the mechanical design, electrical wiring, and three programs.
 
-**Repo Structure**
+# Repo Structure
 "main" branch
 - CAD: directory containing STL files used to create this robot
 - src: directory containing all final source codes and their Makefiles
@@ -9,6 +10,19 @@ Half-walking man is a project aiming to develop a bipedal robot having the abili
   - km: contains kernel module code, which receive commands from userspace program and implements distance sensor and servo motors controls.
 
 "burnt" branch is for development
+
+# How to replicate our creation
+
+**Components**
+- Beagle Bone black (with lab5 kernel image, USB to TTL Serial Cable, and power supply) x 1
+- HC-SR04 distance sensor x 1
+- Logitech Orbit AF Webcam x 1
+- Servo motors x 3
+- LAN cable x 1
+- Laptop with Linux OS x 1
+
+**Wiring Diagram**
+![alt text](https://github.com/isarachol/EC535_FINAL_PROJECT.git/wiring.png "Wiring Diagram")
 
 **Create Local Network**
 - First you need to assign IP address using Interface Configuration to Laptop using Beagle Bone's ethernet IP address
