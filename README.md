@@ -6,6 +6,7 @@ Half-wlkaing man is the project aimming to develop a bipedel robots haing an abi
 
 For Laptop: 
 - Using IP address number except the last digit to create private channel
+- Find the name your ethernet port and replace enp5s0 with it
 - Command: sudo ifconfig enp5s0 192.168.7.1 netmask 255.255.255.0 up (assign IP address to ethernet part and then determine the capcaity of how many devices can be assigned to use the private channel)
 
 For Beagle Bone: 
