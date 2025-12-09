@@ -1,29 +1,56 @@
-#include <opencv2/opencv.hpp>
-#include <iostream>
-#include <vector>
+// ==========================================
+// libraries
+// ==========================================
+#include <opencv2/opencv.hpp> // OpenCV library: Provide computer vision and image processing 
+#include <iostream> // Standard C++ input and output stream library
+#include <vector> // Vector Container: for dynamic arrary 
 #include <string>
 #include <algorithm>
 #include <cmath>
-#include <sys/socket.h> 
-#include <arpa/inet.h>  
+#include <sys/socket.h> // For socket Programming 
+#include <arpa/inet.h> // Internet Address Operations
 #include <unistd.h>     
 #include <sstream>      
 #include <cstdlib>      
-#include <netinet/tcp.h> // REQUIRED FOR TCP_NODELAY Fix
+#include <netinet/tcp.h> // TCP protocol specific options - enables TCP_NODELAY
 
+//======================================
+// Namespace - avoid need to use prefix 
+//======================================
 using namespace cv;
 using namespace std;
 
-// --- NETWORK CONFIGURATION ---
+//======================================
+// Network Configuration
+//======================================
+// This is the BeagleBone IP address, which can vary based on each device
+// Using ifconfig in BeagleBone to correct the IP address
 #define ROBOT_IP "192.168.7.2" 
+// Define port number: 
+// The BeagleBone server should have the same for a successful connection 
 #define ROBOT_PORT 5000
 
-// --- VISION CONFIGURATION ---
-const int TARGET_AREA_MIN_PIXELS = 1000; 
-const int DEAD_ZONE_PIXELS = 50; 
-const double SHAPE_APPROX_PRECISION = 0.04; 
+//======================================
+// Vision Configuration
+//======================================
+// Minimum contour area in pixels to be considered a valid object
+// smaller object will be filtered out
+const int Min_pixel = 1000; 
 
-const vector<string> TARGET_STATES = {
+// Dead zone of center alignment (in pixels)
+// The variable determines if the robot will go forward, left, or right
+// If the verified object is outside the dead zone, the  robot will turn left or right to make the Target_state object 
+// within the defined zone
+const int Dead_zone = 50; 
+
+// This is the shape approximation coefficient
+// It will be used in approxPolyPD to simplify the contour
+// Higher value leads to aggressive simplification, having a higher chance of missing the shape 
+const double Shape_approx = 0.04; 
+
+// List of target states the robot can track 
+// The target can be changed by pressing SPACE on the keyboard
+const vector<string> Target_state = {
     "YELLOW_SQUARE",
     "YELLOW_TRIANGLE",
     "BLUE_SQUARE",
@@ -31,23 +58,26 @@ const vector<string> TARGET_STATES = {
     "STOP_ALL"
 };
 
-// --- HSV COLOR THRESHOLDS ---
-
+//======================================
+// HSV Color Thresholds 
+//======================================
 // YELLOW
 const Scalar LOWER_YELLOW(15, 100, 100);
 const Scalar UPPER_YELLOW(35, 255, 255);
 
-// DARK BLUE (Target)
+// DARK BLUE
 const Scalar LOWER_BLUE(90, 60, 30);
 const Scalar UPPER_BLUE(140, 255, 255); 
 
-// --- VISION CLASS ---
+//======================================
+// Vision Class
+//======================================
 class RobotVisionSystem {
 public: 
-    string currentTargetName_;
-    Scalar targetLowerColor_;
-    Scalar targetUpperColor_;
-    string targetShapeName_;
+    string currentTarget_stateName_;
+    Scalar Target_stateLowerColor_;
+    Scalar Target_stateUpperColor_;
+    string Target_stateShapeName_;
     
     void preprocess_mask(Mat& mask) {
         erode(mask, mask, Mat(), Point(-1, -1), 1);
@@ -57,7 +87,7 @@ public:
     string analyze_shape(const vector<Point>& contour) {
         double perimeter = arcLength(contour, true);
         vector<Point> approx;
-        approxPolyDP(contour, approx, SHAPE_APPROX_PRECISION * perimeter, true);
+        approxPolyDP(contour, approx, Shape_approx * perimeter, true);
         
         if (approx.size() == 3) return "TRIANGLE";
         if (approx.size() == 4) return "SQUARE"; 
@@ -65,36 +95,36 @@ public:
         return "UNKNOWN";
     }
 
-    RobotVisionSystem(const string& initialTarget) {
-        set_target(initialTarget);
+    RobotVisionSystem(const string& initialTarget_state) {
+        set_Target_state(initialTarget_state);
     }
     
-    void set_target(const string& targetName) {
-        currentTargetName_ = targetName;
-        if (targetName == "STOP_ALL") return;
+    void set_Target_state(const string& Target_stateName) {
+        currentTarget_stateName_ = Target_stateName;
+        if (Target_stateName == "STOP_ALL") return;
 
-        size_t underscorePos = targetName.find('_');
-        string color = targetName.substr(0, underscorePos);
-        targetShapeName_ = targetName.substr(underscorePos + 1);
+        size_t underscorePos = Target_stateName.find('_');
+        string color = Target_stateName.substr(0, underscorePos);
+        Target_stateShapeName_ = Target_stateName.substr(underscorePos + 1);
 
         if (color == "YELLOW") {
-            targetLowerColor_ = LOWER_YELLOW;
-            targetUpperColor_ = UPPER_YELLOW;
+            Target_stateLowerColor_ = LOWER_YELLOW;
+            Target_stateUpperColor_ = UPPER_YELLOW;
         } else if (color == "BLUE") {
-            targetLowerColor_ = LOWER_BLUE;
-            targetUpperColor_ = UPPER_BLUE;
+            Target_stateLowerColor_ = LOWER_BLUE;
+            Target_stateUpperColor_ = UPPER_BLUE;
         } 
     }
 
     string get_motor_command(Mat& frame) {
-        if (currentTargetName_ == "STOP_ALL") return "STOP:0";
+        if (currentTarget_stateName_ == "STOP_ALL") return "STOP:0";
         
         Mat hsv, mask;
         cvtColor(frame, hsv, COLOR_BGR2HSV);
-        inRange(hsv, targetLowerColor_, targetUpperColor_, mask);
+        inRange(hsv, Target_stateLowerColor_, Target_stateUpperColor_, mask);
         preprocess_mask(mask);
         
-        imshow("Debug: Target Mask", mask);
+        imshow("Debug: Target_state Mask", mask);
 
         vector<vector<Point>> contours;
         findContours(mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -107,30 +137,30 @@ public:
         });
         vector<Point> largest_contour = *largest_contour_it;
 
-        if (contourArea(largest_contour) < TARGET_AREA_MIN_PIXELS) return "STOP:0";
+        if (contourArea(largest_contour) < Min_pixel) return "STOP:0";
 
         string detected_shape = analyze_shape(largest_contour);
 
-        if (detected_shape == targetShapeName_) {
+        if (detected_shape == Target_stateShapeName_) {
             Moments M = moments(largest_contour);
-            int target_cx = (M.m00 != 0) ? (int)(M.m10 / M.m00) : frame.cols / 2; 
+            int Target_state_cx = (M.m00 != 0) ? (int)(M.m10 / M.m00) : frame.cols / 2; 
 
             // Visualization
             Rect bbox = boundingRect(largest_contour);
             rectangle(frame, bbox, Scalar(0, 255, 0), 2); 
-            putText(frame, "TARGET: " + currentTargetName_, Point(bbox.tl().x, bbox.tl().y - 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+            putText(frame, "Target_state: " + currentTarget_stateName_, Point(bbox.tl().x, bbox.tl().y - 10), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
 
             // --- FPV CONTROL LOGIC ---
             int screen_center_x = frame.cols / 2;
-            int error = target_cx - screen_center_x;
+            int error = Target_state_cx - screen_center_x;
             int angle = 90; 
             
             line(frame, Point(screen_center_x, 0), Point(screen_center_x, frame.rows), Scalar(255, 255, 255), 1);
 
-            if (error < -DEAD_ZONE_PIXELS) {
+            if (error < -Dead_zone) {
                 angle = 45; 
                 putText(frame, "<< TURN LEFT", Point(10, frame.rows - 50), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 255), 3);
-            } else if (error > DEAD_ZONE_PIXELS) {
+            } else if (error > Dead_zone) {
                 angle = 135; 
                 putText(frame, "TURN RIGHT >>", Point(frame.cols - 250, frame.rows - 50), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 255), 3);
             } else {
@@ -156,7 +186,7 @@ int main() {
         cout << "Network configured successfully." << endl;
     }
 
-    RobotVisionSystem visionSystem(TARGET_STATES[0]);
+    RobotVisionSystem visionSystem(Target_state[0]);
     int current_index = 0;
     
     // --- 1. SETUP VIDEO ---
@@ -221,9 +251,9 @@ int main() {
         }
 
         // D. DEBUG OUTPUT
-        cout << "\rTarget: " << visionSystem.currentTargetName_ << " | Cmd: " << motor_command << " | Net: " << (sock >= 0 ? "OK" : "DISC") << "      " << flush;
+        cout << "\rTarget_state: " << visionSystem.currentTarget_stateName_ << " | Cmd: " << motor_command << " | Net: " << (sock >= 0 ? "OK" : "DISC") << "      " << flush;
         
-        putText(frame, "Target: " + visionSystem.currentTargetName_, Point(10, 30), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255, 0, 0), 2);
+        putText(frame, "Target_state: " + visionSystem.currentTarget_stateName_, Point(10, 30), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255, 0, 0), 2);
         putText(frame, "Sent: " + motor_command, Point(10, 60), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 255, 0), 2);
         
         imshow("Vision Client (FPV)", frame);
@@ -231,8 +261,8 @@ int main() {
         int key = waitKey(30);
         if (key == 27) break; 
         if (key == 32) { 
-            current_index = (current_index + 1) % TARGET_STATES.size();
-            visionSystem.set_target(TARGET_STATES[current_index]);
+            current_index = (current_index + 1) % Target_state.size();
+            visionSystem.set_Target_state(Target_state[current_index]);
         }
     }
     
