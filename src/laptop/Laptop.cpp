@@ -62,29 +62,38 @@ const vector<string> Target_state = {
 // HSV Color Thresholds 
 //======================================
 // YELLOW
-const Scalar LOWER_YELLOW(15, 100, 100);
-const Scalar UPPER_YELLOW(35, 255, 255);
+const Scalar Lower_yellow(15, 100, 100);
+const Scalar Upper_yellow(35, 255, 255);
 
 // DARK BLUE
-const Scalar LOWER_BLUE(90, 60, 30);
-const Scalar UPPER_BLUE(140, 255, 255); 
+const Scalar Lower_blue(90, 60, 30);
+const Scalar Upper_blue(140, 255, 255); 
 
 //======================================
 // Vision Class
 //======================================
+// The class handles object detection, tracking, and motor command generation 
 class RobotVisionSystem {
-public: 
-    string currentTarget_stateName_;
-    Scalar Target_stateLowerColor_;
-    Scalar Target_stateUpperColor_;
-    string Target_stateShapeName_;
-    
+public:
+    // Member Variables
+    string currentTarget_stateName_; // Current Tracking Target 
+    Scalar Target_stateLowerColor_; // Lower HSV threshold for target color
+    Scalar Target_stateUpperColor_; // Upper HSV threshold for target color
+    string Target_stateShapeName_; // Current target shape 
+
+    // This is the noise filtering process for binary masking
     void preprocess_mask(Mat& mask) {
+        // Erode: This will remove small white noise pixels (1 iteration)
         erode(mask, mask, Mat(), Point(-1, -1), 1);
+        // Dilate: This will restore object size and fill small holes (3 iterations)
+        // More dilate than erode helps connect broken object regions
         dilate(mask, mask, Mat(), Point(-1, -1), 3);
     }
-    
+
+    // This function will analyze the contour 
+    // Determine whether it is a square or a triangle 
     string analyze_shape(const vector<Point>& contour) {
+        //Calculate the perimeter of the contour 
         double perimeter = arcLength(contour, true);
         vector<Point> approx;
         approxPolyDP(contour, approx, Shape_approx * perimeter, true);
@@ -108,11 +117,11 @@ public:
         Target_stateShapeName_ = Target_stateName.substr(underscorePos + 1);
 
         if (color == "YELLOW") {
-            Target_stateLowerColor_ = LOWER_YELLOW;
-            Target_stateUpperColor_ = UPPER_YELLOW;
+            Target_stateLowerColor_ = Lower_yellow;
+            Target_stateUpperColor_ = Upper_yellow;
         } else if (color == "BLUE") {
-            Target_stateLowerColor_ = LOWER_BLUE;
-            Target_stateUpperColor_ = UPPER_BLUE;
+            Target_stateLowerColor_ = Lower_blue;
+            Target_stateUpperColor_ = Upper_blue;
         } 
     }
 
