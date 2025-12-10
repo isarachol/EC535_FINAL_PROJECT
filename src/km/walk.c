@@ -19,7 +19,7 @@ MODULE_AUTHOR("EC535 User");
 MODULE_DESCRIPTION("Walker Robot Driver with Vision Bridge");
 
 // ============================================
-// DEFINITIONS and constants
+// Definitions and constants
 // ============================================
 // Define pins
 #define trig_pin 47 
