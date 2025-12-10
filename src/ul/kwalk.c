@@ -1,17 +1,28 @@
+//=======================================
+// Objective
+//=======================================
+// This program will be run on Beagle Bone and acts as a bridge
+// The functionality:
+// 1. Receives motor commands from laptop over network (TCP)
+// 2. Forwards commands to the kernel driver that controls servos
+// Data Flow: Laptop Vision → Network → Userspace → Kernel Driver → Servos
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+#include <arpa/inet.h> // Socket networking
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <signal.h>
+#include <signal.h> //Signal handling (CTRL+C)
 
-// --- CONFIGURATION ---
-#define PORT 5000
-#define KERNEL_DEVICE_PATH "/dev/walker"
-#define MAX_COMMAND_LENGTH 32 // e.g., "FORWARD:135"
+//=======================================
+// Configuration
+//=======================================
+#define PORT 5000 // Define TCP port to listen 
+#define KERNEL_DEVICE_PATH "/dev/walker" // Path to kernel device file
+#define MAX_COMMAND_LENGTH 32 //
 
 // Global file descriptors for clean shutdown
 int server_fd_g = -1;
