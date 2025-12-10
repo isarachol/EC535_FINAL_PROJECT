@@ -58,7 +58,7 @@ First: Install Kernel Module (Beagle Bone)
 
 Second: Run Object Detection Code (Laptop)
 1. Compile Code with C++ and OpenCV flag
-    - Command: ` g++ Test5.cpp -o Test5 `pkg-config --cflags --libs opencv4` `
+    - Command: `` g++ Test5.cpp -o Test5 `pkg-config --cflags --libs opencv4` ``
 2. Run Code:
     - Command: `./Laptop`
   
