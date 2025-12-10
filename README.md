@@ -22,7 +22,7 @@ Half-body walking man is a project aiming to develop a simple bipedal robot capa
 - Laptop with Linux OS x 1
 
 **Wiring Diagram**
-![alt text](https://github.com/isarachol/EC535_FINAL_PROJECT/blob/main/wiring.png "Wiring Diagram")
+![alt text](https://github.com/isarachol/EC535_FINAL_PROJECT/blob/main/wiring_diagram.png "Wiring Diagram")
 
 **Create Local Network**
 - First you need to assign IP address using Interface Configuration to Laptop using Beagle Bone's ethernet IP address
