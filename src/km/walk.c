@@ -293,7 +293,7 @@ static void free_gpio_pins(void){
 
 
 // ============================================
-// CHARACTER DEVICE FUNCTIONS
+// Character Devices Function 
 // ============================================
 
 static ssize_t dev_read(struct file *filp, char *buf, size_t count, loff_t *f_pos){
