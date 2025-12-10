@@ -387,7 +387,7 @@ static int dev_open(struct inode *inode, struct file *filp) { return 0; }
 
 
 // ============================================
-// INIT & EXIT
+// Init & Exit
 // ============================================
 static int __init walker_init(void)
 {
